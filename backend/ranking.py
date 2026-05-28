@@ -1,4 +1,3 @@
-# src/ranking.py
 import sys
 import json
 from backend.shared.security import (

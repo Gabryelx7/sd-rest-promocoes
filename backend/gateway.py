@@ -10,16 +10,31 @@ from backend.shared.security import (
     create_signed_envelope
 )
 from backend.shared.messaging import RabbitMQHandler
+from flask_sse import sse
 
 PRIVATE_KEY_PATH = "backend/keys/gateway_private_key.pem"
 PROMOCAO_PUBLIC_KEY_PATH = "backend/keys/promocao_public_key.pem"
+RANKING_PUBLIC_KEY_PATH = "keys/ranking_public_key.pem"
 
 private_key = load_private_key(PRIVATE_KEY_PATH)
 promocao_public_key = load_public_key(PROMOCAO_PUBLIC_KEY_PATH)
+ranking_public_key = load_public_key(RANKING_PUBLIC_KEY_PATH)
 
 promocoes_publicadas = {}
 promocoes_destaque = {}
 interesses = {}
+
+# Gateway
+# New item published -> add to dictionary
+# New item on interested category -> notify frontend
+# New item on destaque -> notify frontend
+# New item on notificao.hotdeal?
+
+# Notificação
+# New item published -> publish on category
+# New item on destaque -> publish on category
+# -> change to notify by email? 
+
 
 publisher_broker = RabbitMQHandler()
 publisher_broker.establish_connection()
@@ -30,15 +45,48 @@ def consumer():
     consumer_broker.establish_connection()
     queue_name = consumer_broker.declare_queue()
 
-    consumer_broker.bind_keys(queue_name, ["promocao.publicada"])
+    consumer_broker.bind_keys(
+        queue_name,
+        [
+            "promocao.publicada", 
+            "promocao.destaque",
+            "promocao.categoria.*"
+        ]
+    )
 
     def callback(ch, method, properties, body):
         try:
             envelope = json.loads(body)
-            event_data = verify_and_extract_envelope(envelope, promocao_public_key)
+            incoming_routing_key = method.routing_key
+
+            if incoming_routing_key == "promocao.publicada":
+                event_data = verify_and_extract_envelope(envelope, promocao_public_key)
+                promocao_id = event_data['id']
+                promocoes_publicadas[promocao_id] = event_data
+
+            elif incoming_routing_key == "promocao.destaque":
+                event_data = verify_and_extract_envelope(envelope, ranking_public_key)
+                
+                category = event_data['categoria']
+                score = event_data['pontuacao']
+                
+                pub_message = {
+                    "Título": "HOT DEAL",
+                    "Mensagem": f"Uma promoção da categoria {category} está em alta com {score} votos!",
+                    "Produto": event_data['produto'],
+                    "Preço": event_data['preco']
+                }
+                sse.publish(pub_message, type='hotdeal')
+                print("Hot Deal message sent!")
             
-            promocao_id = event_data['id']
-            promocoes_publicadas[promocao_id] = event_data
+            if incoming_routing_key.startswith("promocao.categoria."):
+                event_data = verify_and_extract_envelope(envelope, promocao_public_key)
+
+                category = incoming_routing_key.split('.')[-1]
+
+                pub_message = event_data
+                sse.publish(pub_message, type='category')
+                print("Category message sent!")
         
         except InvalidSignature:
             print("\n[!] Promoção publicada com assinatura inválida. Descartando.")
