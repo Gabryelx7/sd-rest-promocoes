@@ -18,6 +18,8 @@ private_key = load_private_key(PRIVATE_KEY_PATH)
 promocao_public_key = load_public_key(PROMOCAO_PUBLIC_KEY_PATH)
 
 promocoes_publicadas = {}
+promocoes_destaque = {}
+interesses = {}
 
 publisher_broker = RabbitMQHandler()
 publisher_broker.establish_connection()
@@ -109,6 +111,31 @@ def vote_on_promotion(promo_id: str, request_data: dict) -> dict:
 
     print(f"[+] Voto {vote} submetido para '{promo['produto']}'.")
     return event_data
+
+def register_interest(request_data: dict):
+    if "X-Client-Id" in request_data and "interest" in request_data:
+        client_id = request_data["X-Client-Id"]
+        new_interest = request_data["interest"]
+        
+        if client_id in interesses and new_interest not in interesses[client_id]:
+            interesses[client_id].append(new_interest)
+        else:
+            interesses[client_id] = [new_interest]
+        
+        return interesses[client_id]
+    
+    return {}
+
+def remove_interest(request_data: dict):
+    if "X-Client-Id" in request_data and "interest" in request_data:
+        client_id = request_data["X-Client-Id"]
+        target_interest = request_data["interest"]
+
+        if client_id in interesses and target_interest in interesses[client_id]:
+            interesses[client_id].remove(target_interest)
+            return interesses[client_id]
+    
+    return {}
 
 # if __name__ == "__main__":
 #     try:
