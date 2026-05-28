@@ -1,14 +1,14 @@
 # src/ranking.py
 import sys
 import json
-from shared.security import (
+from backend.shared.security import (
     load_private_key,
     load_public_key,
     verify_and_extract_envelope,
     create_signed_envelope
 )
+from backend.shared.messaging import RabbitMQHandler
 from cryptography.exceptions import InvalidSignature
-from shared.messaging import RabbitMQHandler
 
 PRIVATE_KEY_PATH = "keys/ranking_private_key.pem"
 GATEWAY_PUBLIC_KEY_PATH = "keys/gateway_public_key.pem"

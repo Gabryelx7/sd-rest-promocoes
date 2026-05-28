@@ -1,12 +1,12 @@
 import sys
 import json
-from src.shared.security import (
+from backend.shared.security import (
     load_private_key,
     load_public_key,
     verify_and_extract_envelope,
     create_signed_envelope
 )
-from src.shared.messaging import RabbitMQHandler
+from backend.shared.messaging import RabbitMQHandler
 
 PRIVATE_KEY_PATH = "keys/promocao_private_key.pem"
 GATEWAY_PUBLIC_KEY_PATH = "keys/gateway_public_key.pem"

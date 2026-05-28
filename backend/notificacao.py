@@ -1,8 +1,8 @@
 import sys
 import json
-from shared.security import load_public_key, verify_and_extract_envelope
+from backend.shared.security import load_public_key, verify_and_extract_envelope
+from backend.shared.messaging import RabbitMQHandler
 from cryptography.exceptions import InvalidSignature
-from shared.messaging import RabbitMQHandler
 
 PROMOTION_PUBLIC_KEY_PATH = "keys/promocao_public_key.pem"
 RANKING_PUBLIC_KEY_PATH = "keys/ranking_public_key.pem"
