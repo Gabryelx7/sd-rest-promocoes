@@ -1,4 +1,7 @@
+import os
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+from flask_sse import sse
 from backend.gateway import (
     list_promotions,
     register_promotion,
@@ -8,6 +11,11 @@ from backend.gateway import (
 )
 
 app = Flask(__name__)
+
+load_dotenv()
+
+app.config["REDIS_URL"] = os.getenv("REDIS_URL")
+app.register_blueprint(sse, url_prefix='/stream')
 
 # Lista promoções
 @app.route('/promotions', methods=['GET'])
