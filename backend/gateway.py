@@ -1,3 +1,4 @@
+
 import json
 import sys
 import uuid
@@ -15,10 +16,12 @@ from flask_sse import sse
 PRIVATE_KEY_PATH = "backend/keys/gateway_private_key.pem"
 PROMOCAO_PUBLIC_KEY_PATH = "backend/keys/promocao_public_key.pem"
 RANKING_PUBLIC_KEY_PATH = "backend/keys/ranking_public_key.pem"
+NOTIFICACAO_PUBLIC_KEY_PATH = "backend/keys/notificacao_public_key.pem"
 
 private_key = load_private_key(PRIVATE_KEY_PATH)
 promocao_public_key = load_public_key(PROMOCAO_PUBLIC_KEY_PATH)
 ranking_public_key = load_public_key(RANKING_PUBLIC_KEY_PATH)
+notificacao_public_key = load_public_key(NOTIFICACAO_PUBLIC_KEY_PATH)
 
 promocoes_publicadas = {}
 promocoes_destaque = {}
@@ -43,6 +46,7 @@ def consumer():
     )
 
     def callback(ch, method, properties, body):
+        from backend.app import app
         try:
             envelope = json.loads(body)
             incoming_routing_key = method.routing_key
@@ -54,37 +58,31 @@ def consumer():
 
             elif incoming_routing_key == "promocao.destaque":
                 event_data = verify_and_extract_envelope(envelope, ranking_public_key)
-                
                 category = event_data['categoria']
                 score = event_data['pontuacao']
-                
                 pub_message = {
                     "Título": "HOT DEAL",
                     "Mensagem": f"Uma promoção da categoria {category} está em alta com {score} votos!",
                     "Produto": event_data['produto'],
                     "Preço": event_data['preco']
                 }
-                sse.publish(pub_message, type='hotdeal')
+                with app.app_context():
+                    sse.publish(pub_message, type='hotdeal')
                 print("Hot Deal message sent!")
-            
-            if incoming_routing_key.startswith("promocao.categoria."):
-                event_data = verify_and_extract_envelope(envelope, promocao_public_key)
 
+            elif incoming_routing_key.startswith("promocao.categoria."):
+                event_data = verify_and_extract_envelope(envelope, notificacao_public_key)
                 category = incoming_routing_key.split('.')[-1]
-
                 pub_message = event_data
-                sse.publish(pub_message, type='category')
+                with app.app_context():
+                    sse.publish(pub_message, type='category')
                 print("Category message sent!")
-        
+
         except InvalidSignature:
             print("\n[!] Promoção publicada com assinatura inválida. Descartando.")
         except Exception as e:
             print(f"\n[!] Erro ao validar envelope: {e}")
-    
     consumer_broker.start_consuming(queue_name, callback)
-
-consumer_thread = threading.Thread(target=consumer, daemon=True)
-consumer_thread.start()
 
 # --- Métodos Chamáveis ---
 def list_promotions() -> dict:
@@ -175,8 +173,7 @@ def remove_interest(request_data: dict):
 
 if __name__ == "__main__":
     try:
-        while True:
-            pass
+        consumer()
     except KeyboardInterrupt:
         print("\nAbortando...")
         publisher_broker.close_connection()
