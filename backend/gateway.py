@@ -120,8 +120,8 @@ def register_promotion(new_promo: dict) -> dict:
 
 def vote_on_promotion(promo_id: str, request_data: dict) -> dict:
     try:
-        promo = promocoes_publicadas["promo_id"]
-    except IndexError:
+        promo = promocoes_publicadas[promo_id]
+    except KeyError:
         print("Nenhuma promoção encontrada para o ID fornecido!")
         return {}
     
@@ -151,8 +151,9 @@ def register_interest(request_data: dict):
         client_id = request_data["X-Client-Id"]
         new_interest = request_data["interest"]
         
-        if client_id in interesses and new_interest not in interesses[client_id]:
-            interesses[client_id].append(new_interest)
+        if client_id in interesses:
+            if new_interest not in interesses[client_id]:
+                interesses[client_id].append(new_interest)
         else:
             interesses[client_id] = [new_interest]
         
