@@ -34,8 +34,8 @@ def post_promotion():
     return jsonify(new_promo), 400
 
 # Vota em uma promoção
-@app.route('/promotions/<int:promo_id>', methods=['POST'])
-def vote_on_promotion(promo_id):
+@app.route('/promotions/<string:promo_id>', methods=['POST'])
+def vote_promotion_route(promo_id):
     updated_data = request.get_json()
     vote_response = vote_on_promotion(promo_id, updated_data)
     if vote_response:
