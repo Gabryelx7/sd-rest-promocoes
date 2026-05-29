@@ -4,8 +4,8 @@ from backend.shared.security import load_public_key, verify_and_extract_envelope
 from backend.shared.messaging import RabbitMQHandler
 from cryptography.exceptions import InvalidSignature
 
-PROMOTION_PUBLIC_KEY_PATH = "keys/promocao_public_key.pem"
-RANKING_PUBLIC_KEY_PATH = "keys/ranking_public_key.pem"
+PROMOTION_PUBLIC_KEY_PATH = "backend/keys/promocao_public_key.pem"
+RANKING_PUBLIC_KEY_PATH = "backend/keys/ranking_public_key.pem"
 
 promotion_public_key = load_public_key(PROMOTION_PUBLIC_KEY_PATH)
 ranking_public_key = load_public_key(RANKING_PUBLIC_KEY_PATH)

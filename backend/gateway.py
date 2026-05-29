@@ -14,7 +14,7 @@ from flask_sse import sse
 
 PRIVATE_KEY_PATH = "backend/keys/gateway_private_key.pem"
 PROMOCAO_PUBLIC_KEY_PATH = "backend/keys/promocao_public_key.pem"
-RANKING_PUBLIC_KEY_PATH = "keys/ranking_public_key.pem"
+RANKING_PUBLIC_KEY_PATH = "backend/keys/ranking_public_key.pem"
 
 private_key = load_private_key(PRIVATE_KEY_PATH)
 promocao_public_key = load_public_key(PROMOCAO_PUBLIC_KEY_PATH)
@@ -23,18 +23,6 @@ ranking_public_key = load_public_key(RANKING_PUBLIC_KEY_PATH)
 promocoes_publicadas = {}
 promocoes_destaque = {}
 interesses = {}
-
-# Gateway
-# New item published -> add to dictionary
-# New item on interested category -> notify frontend
-# New item on destaque -> notify frontend
-# New item on notificao.hotdeal?
-
-# Notificação
-# New item published -> publish on category
-# New item on destaque -> publish on category
-# -> change to notify by email? 
-
 
 publisher_broker = RabbitMQHandler()
 publisher_broker.establish_connection()
@@ -185,10 +173,11 @@ def remove_interest(request_data: dict):
     
     return {}
 
-# if __name__ == "__main__":
-#     try:
-#         start_api()
-#     except KeyboardInterrupt:
-#         print("\nAbortando...")
-#         publisher_broker.close_connection()
-#         sys.exit(0)
+if __name__ == "__main__":
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        print("\nAbortando...")
+        publisher_broker.close_connection()
+        sys.exit(0)

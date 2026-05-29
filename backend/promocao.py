@@ -8,8 +8,8 @@ from backend.shared.security import (
 )
 from backend.shared.messaging import RabbitMQHandler
 
-PRIVATE_KEY_PATH = "keys/promocao_private_key.pem"
-GATEWAY_PUBLIC_KEY_PATH = "keys/gateway_public_key.pem"
+PRIVATE_KEY_PATH = "backend/keys/promocao_private_key.pem"
+GATEWAY_PUBLIC_KEY_PATH = "backend/keys/gateway_public_key.pem"
 
 private_key = load_private_key(PRIVATE_KEY_PATH)
 gateway_public_key = load_public_key(GATEWAY_PUBLIC_KEY_PATH)

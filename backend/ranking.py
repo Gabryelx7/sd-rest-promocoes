@@ -9,8 +9,8 @@ from backend.shared.security import (
 from backend.shared.messaging import RabbitMQHandler
 from cryptography.exceptions import InvalidSignature
 
-PRIVATE_KEY_PATH = "keys/ranking_private_key.pem"
-GATEWAY_PUBLIC_KEY_PATH = "keys/gateway_public_key.pem"
+PRIVATE_KEY_PATH = "backend/keys/ranking_private_key.pem"
+GATEWAY_PUBLIC_KEY_PATH = "backend/keys/gateway_public_key.pem"
 HOT_DEAL_THRESHOLD = 3
 
 private_key = load_private_key(PRIVATE_KEY_PATH)
