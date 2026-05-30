@@ -4,8 +4,8 @@ from cryptography.hazmat.primitives import serialization
 KEYS = ["promocao", "ranking", "gateway", "notificacao"]
 
 for key in KEYS:
-    PRIVATE_KEY_FILE = f"keys/{key}_private_key.pem"
-    PUBLIC_KEY_FILE = f"keys/{key}_public_key.pem"
+    PRIVATE_KEY_FILE = f"backend/keys/{key}_private_key.pem"
+    PUBLIC_KEY_FILE = f"backend/keys/{key}_public_key.pem"
 
     private_key = ed25519.Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
