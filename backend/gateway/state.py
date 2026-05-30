@@ -61,7 +61,7 @@ class SharedState:
     def add_interest(self, client_id, new_interest):
         with self._lock:
             if client_id in self.interests:
-                if new_interest not in self.interests:
+                if new_interest not in self.interests[client_id]:
                     self.interests[client_id].append(new_interest)
                 else:
                     print(f"[*] Interesse já existe para o cliente: {client_id}")
@@ -82,3 +82,12 @@ class SharedState:
             
             print(f"[!] Cliente inválido: {client_id}")
             return {}
+    
+    def get_clients_per_interest(self, target_interest):
+        with self._lock:
+            clients_list = []
+            for client_id, interests in self.interests.items():
+                if target_interest in interests:
+                    clients_list.append(client_id)
+            
+            return clients_list

@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_sse import sse
@@ -73,9 +74,7 @@ def delete_interest():
 
 if __name__ == "__main__":
     try:
-        consumer(state_object)
         app.run(debug=True)
-    except KeyboardInterrupt:
+    except Exception:
         print("\nAbortando...")
-        state_object.publisher_broker.close_connection()
         sys.exit(0)

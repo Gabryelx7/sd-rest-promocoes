@@ -1,4 +1,5 @@
 import json
+import sys
 from backend.shared.security import verify_and_extract_envelope
 from backend.shared.messaging import RabbitMQHandler
 from backend.gateway.state import SharedState
@@ -20,7 +21,7 @@ def consumer(shared_state: SharedState):
     )
 
     def callback(ch, method, properties, body):
-        from backend.app import app
+        from backend.gateway.app import app
         try:
             envelope = json.loads(body)
             incoming_routing_key = method.routing_key
@@ -30,7 +31,7 @@ def consumer(shared_state: SharedState):
                 shared_state.add_promotion(event_data)
 
             elif incoming_routing_key == "promocao.destaque":
-                event_data = verify_and_extract_envelope(envelope, ranking_public_key)
+                event_data = verify_and_extract_envelope(envelope, shared_state.ranking_public_key)
                 category = event_data['categoria']
                 score = event_data['pontuacao']
                 pub_message = {
@@ -44,15 +45,28 @@ def consumer(shared_state: SharedState):
                 print("Hot Deal message sent!")
 
             elif incoming_routing_key.startswith("promocao.categoria."):
-                event_data = verify_and_extract_envelope(envelope, notificacao_public_key)
                 category = incoming_routing_key.split('.')[-1]
-                pub_message = event_data
-                with app.app_context():
-                    sse.publish(pub_message, type='category')
-                print("Category message sent!")
+
+                clients_list = shared_state.get_clients_per_interest(category)
+                if clients_list:
+                    pub_message = envelope
+                    with app.app_context():
+                        for client in clients_list:
+                            sse.publish(pub_message, type='category', channel=client)
+                            print("[+] Category message sent!")
 
         except InvalidSignature:
             print("\n[!] Promoção publicada com assinatura inválida. Descartando.")
         except Exception as e:
             print(f"\n[!] Erro ao validar envelope: {e}")
+
     consumer_broker.start_consuming(queue_name, callback)
+
+if __name__ == "__main__":
+    try:
+        from backend.gateway.app import state_object
+        consumer(state_object)
+    except KeyboardInterrupt:
+        print("\n[!] Abortando...")
+        state_object.publisher_broker.close_connection()
+        sys.exit(0)
