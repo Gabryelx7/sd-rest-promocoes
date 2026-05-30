@@ -33,31 +33,15 @@ class SharedState:
         with self._lock:
             return self.published_promos
 
-    def add_promotion(self, new_promo, promo_id):
-        print("\n--- Cadastro de Promoção ---")
-
+    def add_promotion(self, new_promo):
         with self._lock:
             try:
-                product_name = new_promo["produto"]
-                category = new_promo["categoria"]
-                price = float(new_promo["preco"])
-            except Exception:
-                return None
-            
-            self.published_promos[""]
-            
-            event_data = {
-                "id": str(uuid.uuid4()),
-                "produto": product_name,
-                "categoria": category,
-                "preco": price,
-            }
+                promo_id = new_promo["id"]
+                assert promo_id not in self.published_promos.keys()
+                self.published_promos[promo_id] = new_promo
 
-            envelope = create_signed_envelope(event_data, self._private_key)
-            routing_key = "promocao.recebida"
-            self.publisher_broker.publish_message(routing_key, envelope)
-            self.published_promos[promo_id] = new_promo
-            return "Promoção Recebidas!"
+            except (KeyError, AssertionError):
+                print("[!] Chave de promoção inválida")
     
     def add_vote(self, promo_id, vote):
         with self._lock:
@@ -65,6 +49,7 @@ class SharedState:
                 target_promo = self.published_promos[promo_id]
             except KeyError:
                 print("[!] Promoção Selecionada Inválida!")
+                return {}
             
             target_promo["votos"] += vote
             return target_promo
