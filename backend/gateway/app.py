@@ -1,8 +1,11 @@
 import os
+import sys
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_sse import sse
-from backend.gateway import (
+from backend.gateway.state import SharedState
+from backend.gateway.consumer import consumer
+from backend.gateway.service import (
     list_promotions,
     register_promotion,
     vote_on_promotion,
@@ -17,17 +20,19 @@ load_dotenv()
 app.config["REDIS_URL"] = os.getenv("REDIS_URL")
 app.register_blueprint(sse, url_prefix='/stream')
 
+state_object = SharedState()
+
 # Lista promoções
 @app.route('/promotions', methods=['GET'])
 def get_promotions():
-    published_promos = list_promotions()
+    published_promos = list_promotions(state_object)
     return jsonify(published_promos), 200
 
 # Cadastra uma nova promoção
 @app.route('/promotions', methods=['POST'])
 def post_promotion():
     request_body = request.get_json()
-    new_promo = register_promotion(request_body)
+    new_promo = register_promotion(state_object, request_body)
     if new_promo:
         return jsonify(new_promo), 201
     
@@ -36,10 +41,10 @@ def post_promotion():
 # Vota em uma promoção
 @app.route('/promotions/<string:promo_id>', methods=['POST'])
 def vote_promotion_route(promo_id):
-    updated_data = request.get_json()
-    vote_response = vote_on_promotion(promo_id, updated_data)
-    if vote_response:
-        return jsonify(vote_response), 201
+    request_body = request.get_json()
+    updated_promo = vote_on_promotion(state_object, promo_id, request_body)
+    if updated_promo:
+        return jsonify(updated_promo), 201
     
     return jsonify({"error": "Item not found"}), 404
 
@@ -48,9 +53,9 @@ def vote_promotion_route(promo_id):
 def post_interest():
     new_interest = request.get_json()
 
-    interests = register_interest(new_interest)
-    if interests:
-        return jsonify(interests), 201
+    interests_list = register_interest(state_object, new_interest)
+    if interests_list:
+        return jsonify(interests_list), 201
 
     return jsonify({"error": "Bad Request"}), 400
 
@@ -59,12 +64,18 @@ def post_interest():
 def delete_interest():
     target_interest = request.get_json()
 
-    interests = remove_interest(target_interest)
+    interests = remove_interest(state_object, target_interest)
 
     if interests:
         return jsonify(interests), 201
 
     return jsonify({"error": "Bad Request"}), 400
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    try:
+        consumer(state_object)
+        app.run(debug=True)
+    except KeyboardInterrupt:
+        print("\nAbortando...")
+        state_object.publisher_broker.close_connection()
+        sys.exit(0)
