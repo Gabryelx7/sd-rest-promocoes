@@ -5,16 +5,30 @@ const API_BASE = "http://127.0.0.1:5000";
 function App() {
   const [clientId, setClientId] = useState("CLIENTE_TESTE_1");
   const [promotions, setPromotions] = useState([]);
-  const [interests, setInterests] = useState([]);
+
+  // Read from localStorage on initial load
+  const [interests, setInterests] = useState(() => {
+    const saved = localStorage.getItem('myInterests');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('myInterests', JSON.stringify(interests));
+  }, [interests]);
+
   const [newInterest, setNewInterest] = useState("");
   const [notifications, setNotifications] = useState([]);
 
   // --- 1. REST API: Fetch Promotions ---
+  // --- 1. REST API: Fetch Promotions ---
   const fetchPromotions = async () => {
     try {
-      const response = await fetch(`${API_BASE}/promotions`);
+      const response = await fetch(`${API_BASE}/promotions`, {
+        cache: 'no-store', // <--- Force the browser to bypass cache
+        headers: {
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await response.json();
-      // The API returns an object with IDs as keys. Convert to an array.
       setPromotions(Object.values(data));
     } catch (error) {
       console.error("Erro ao buscar promoções:", error);
@@ -46,13 +60,14 @@ function App() {
 
       setNotifications((prev) => [newNotification, ...prev]);
 
-      // Automatically remove notification after 8 seconds
       setTimeout(() => {
         setNotifications((prev) => prev.filter(n => n.id !== newNotification.id));
       }, 8000);
 
-      // Refresh the promotions list so the user sees the new data automatically
-      fetchPromotions();
+      // Add a 300ms safety delay to guarantee backend state is updated
+      setTimeout(() => {
+        fetchPromotions();
+      }, 300);
     };
 
     globalSse.addEventListener('hotdeal', (e) => handleNotification(e, 'hotdeal'));
