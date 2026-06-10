@@ -1,6 +1,12 @@
+import os
 import sys
 import requests
 from backend.shared.security import load_private_key, create_signed_envelope
+from dotenv import load_dotenv
+
+load_dotenv()
+
+RESEND_EMAIL = os.getenv("RESEND_EMAIL")
 
 GATEWAY_URL = "http://127.0.0.1:5000/promotions"
 STORE_PRIVATE_KEY_PATH = "backend/keys/loja_private_key.pem"
@@ -22,8 +28,7 @@ def main():
         print("[!] Preço inválido.")
         return
 
-    # email_loja = input("Email de Notificação da Loja: ").strip()
-    email_loja = "pdias.2003@alunos.utfpr.edu.br"
+    email_loja = RESEND_EMAIL
 
     event_data = {
         "produto": produto,
