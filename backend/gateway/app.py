@@ -55,10 +55,16 @@ def vote_promotion_route(promo_id):
 # Registra interesse em uma categoria
 @app.route('/interests', methods=['POST'])
 def post_interest():
-    new_interest = request.get_json()
+    request_body = request.get_json() or {}
+    client_id = request.headers.get("X-Client-Id")
 
-    interests_list = register_interest(state_object, new_interest)
-    if interests_list:
+    if not client_id:
+        return jsonify({"error": "Missing X-Client-Id header"}), 400
+
+    request_body["X-Client-Id"] = client_id
+
+    interests_list = register_interest(state_object, request_body)
+    if interests_list is not None and interests_list != {}:
         return jsonify(interests_list), 201
 
     return jsonify({"error": "Bad Request"}), 400
@@ -66,12 +72,17 @@ def post_interest():
 # Remove interesse em uma categoria
 @app.route('/interests', methods=['DELETE'])
 def delete_interest():
-    target_interest = request.get_json()
+    request_body = request.get_json() or {}
+    client_id = request.headers.get("X-Client-Id")
+    
+    if not client_id:
+        return jsonify({"error": "Missing X-Client-Id header"}), 400
 
-    interests = remove_interest(state_object, target_interest)
+    request_body["X-Client-Id"] = client_id
 
-    if interests:
-        return jsonify(interests), 201
+    interests = remove_interest(state_object, request_body)
+    if interests is not None and interests != {}:
+        return jsonify(interests), 200
 
     return jsonify({"error": "Bad Request"}), 400
 
