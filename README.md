@@ -1,1 +1,0 @@
-# sd-rest-promocoes

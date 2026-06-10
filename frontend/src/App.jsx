@@ -18,8 +18,7 @@ function App() {
   const [newInterest, setNewInterest] = useState("");
   const [notifications, setNotifications] = useState([]);
 
-  // --- 1. REST API: Fetch Promotions ---
-  // --- 1. REST API: Fetch Promotions ---
+  // --- REST API: Fetch Promotions ---
   const fetchPromotions = async () => {
     try {
       const response = await fetch(`${API_BASE}/promotions`, {
@@ -40,7 +39,7 @@ function App() {
     fetchPromotions();
   }, []);
 
-  // --- 2. SSE: Real-Time Notifications ---
+  // --- SSE: Real-Time Notifications ---
   useEffect(() => {
     if (!clientId) return;
 
@@ -80,7 +79,7 @@ function App() {
     };
   }, [clientId]);
 
-  // --- 3. REST API: Voting ---
+  // --- REST API: Voting ---
   const handleVote = async (promoId, voteValue) => {
     try {
       await fetch(`${API_BASE}/promotions/${promoId}`, {
@@ -95,7 +94,7 @@ function App() {
     }
   };
 
-  // --- 4. REST API: Manage Interests ---
+  // --- REST API: Manage Interests ---
   const handleAddInterest = async (e) => {
     e.preventDefault();
     if (!newInterest) return;
@@ -149,7 +148,7 @@ function App() {
     }
   };
 
-  // --- 5. UI Render ---
+  // --- UI Render ---
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
       <h1>Painel do Consumidor</h1>
