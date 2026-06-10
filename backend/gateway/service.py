@@ -4,8 +4,12 @@ Métodos Chamáveis pela API
 
 import uuid
 from backend.gateway.state import SharedState
-from backend.shared.security import create_signed_envelope
+from backend.shared.security import (
+    create_signed_envelope,
+    verify_and_extract_envelope
+)
 from backend.shared.messaging import RabbitMQHandler
+from cryptography.exceptions import InvalidSignature
 
 def list_promotions(shared_state: SharedState) -> dict:
     published_promos = shared_state.get_promotions()
@@ -14,12 +18,19 @@ def list_promotions(shared_state: SharedState) -> dict:
         return {}
     return published_promos
 
-def register_promotion(shared_state: SharedState, new_promo: dict) -> dict:
+def register_promotion(shared_state: SharedState, request_envelope: dict) -> dict:
     try:
-        product_name = new_promo["produto"]
-        category = new_promo["categoria"]
-        price = float(new_promo["preco"])
-    except Exception:
+        store_data = verify_and_extract_envelope(request_envelope, shared_state.loja_public_key)
+
+        product_name = store_data["produto"]
+        category = store_data["categoria"]
+        price = float(store_data["preco"])
+        email_loja = store_data["email_loja"]
+    except InvalidSignature:
+        print("[!] Assinatura da LOJA inválida rejeitada via HTTP API!")
+        return {"error": "Assinatura digital inválida."}
+    except Exception as e:
+        print(f"[!] Erro de payload: {e}")
         return {}
 
     event_data = {
@@ -27,6 +38,7 @@ def register_promotion(shared_state: SharedState, new_promo: dict) -> dict:
         "produto": product_name,
         "categoria": category,
         "preco": price,
+        "email": email_loja,
         "votos": 0
     }
 

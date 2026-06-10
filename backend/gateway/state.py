@@ -23,6 +23,7 @@ class SharedState:
         self.promocao_public_key = load_public_key("backend/keys/promocao_public_key.pem")
         self.ranking_public_key = load_public_key("backend/keys/ranking_public_key.pem")
         self.notificacao_public_key = load_public_key("backend/keys/notificacao_public_key.pem")
+        self.loja_public_key = load_public_key("backend/keys/loja_public_key.pem")
 
     def get_promotions(self):
         with self._lock:
