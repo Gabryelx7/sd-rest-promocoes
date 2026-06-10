@@ -17,17 +17,12 @@ class SharedState:
         self._lock = Lock()
 
         self._load_keys()
-        self._start_publisher_broker()
 
     def _load_keys(self):
         self.private_key = load_private_key("backend/keys/gateway_private_key.pem")
         self.promocao_public_key = load_public_key("backend/keys/promocao_public_key.pem")
         self.ranking_public_key = load_public_key("backend/keys/ranking_public_key.pem")
         self.notificacao_public_key = load_public_key("backend/keys/notificacao_public_key.pem")
-    
-    def _start_publisher_broker(self):
-        self.publisher_broker = RabbitMQHandler()
-        self.publisher_broker.establish_connection()
 
     def get_promotions(self):
         with self._lock:

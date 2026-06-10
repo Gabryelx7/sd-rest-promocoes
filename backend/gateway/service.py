@@ -4,16 +4,14 @@ Métodos Chamáveis pela API
 
 import uuid
 from backend.gateway.state import SharedState
-from backend.shared.security import (
-    create_signed_envelope
-)
+from backend.shared.security import create_signed_envelope
+from backend.shared.messaging import RabbitMQHandler
 
 def list_promotions(shared_state: SharedState) -> dict:
     published_promos = shared_state.get_promotions()
     if not published_promos:
         print("Nenhuma promoção foi publicada ainda")
         return {}
-    
     return published_promos
 
 def register_promotion(shared_state: SharedState, new_promo: dict) -> dict:
@@ -29,13 +27,15 @@ def register_promotion(shared_state: SharedState, new_promo: dict) -> dict:
         "produto": product_name,
         "categoria": category,
         "preco": price,
-        "votos": 0,
+        "votos": 0
     }
 
     envelope = create_signed_envelope(event_data, shared_state.private_key)
 
-    routing_key = "promocao.recebida"
-    shared_state.publisher_broker.publish_message(routing_key, envelope)
+    publisher = RabbitMQHandler()
+    publisher.establish_connection()
+    publisher.publish_message("promocao.recebida", envelope)
+    publisher.close_connection()
 
     print(f"\n[+] Promoção para '{product_name}' recebida!")
     return event_data
@@ -44,11 +44,30 @@ def vote_on_promotion(shared_state: SharedState, promo_id: str, request_data: di
     try:
         vote = int(request_data["voto"])
         assert vote == 1 or vote == -1
-    except (AssertionError, TypeError):
+    except (AssertionError, TypeError, KeyError):
         print("[!] Voto inválido!")
         return {}
     
     updated_promo = shared_state.add_vote(promo_id, vote)
+    if not updated_promo:
+        return {}
+
+    event_data = {
+        "id": promo_id,
+        "categoria": updated_promo['categoria'],
+        "produto": updated_promo['produto'],
+        "preco": updated_promo['preco'],
+        "voto": vote
+    }
+    
+    envelope = create_signed_envelope(event_data, shared_state.private_key)
+
+    publisher = RabbitMQHandler()
+    publisher.establish_connection()
+    publisher.publish_message("promocao.voto", envelope)
+    publisher.close_connection()
+
+    print(f"[+] Voto de {vote} enviado para a promoção {promo_id[:8]}")
     return updated_promo
 
 def register_interest(shared_state: SharedState, request_data: dict):
