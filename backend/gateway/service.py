@@ -38,7 +38,7 @@ def register_promotion(shared_state: SharedState, request_envelope: dict) -> dic
         "produto": product_name,
         "categoria": category,
         "preco": price,
-        "email": email_loja,
+        "email_loja": email_loja,
         "votos": 0
     }
 
@@ -69,6 +69,7 @@ def vote_on_promotion(shared_state: SharedState, promo_id: str, request_data: di
         "categoria": updated_promo['categoria'],
         "produto": updated_promo['produto'],
         "preco": updated_promo['preco'],
+        "email_loja": updated_promo['email_loja'],
         "voto": vote
     }
     

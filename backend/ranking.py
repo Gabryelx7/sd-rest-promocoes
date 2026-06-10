@@ -46,6 +46,7 @@ def process_vote(ch, method, properties, body):
                 "categoria": event_data['categoria'],
                 "produto": event_data['produto'],
                 "preco": event_data['preco'],
+                "email_loja": event_data['email_loja'],
                 "pontuacao": new_score
             }
             
