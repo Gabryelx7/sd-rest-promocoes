@@ -3,7 +3,7 @@ import sys
 import threading
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
-from flask_sse import sse
+from backend.gateway.sse import sse
 from backend.gateway.state import SharedState
 from backend.gateway.consumer import consumer
 from backend.gateway.service import (
@@ -13,12 +13,15 @@ from backend.gateway.service import (
     register_interest,
     remove_interest
 )
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 load_dotenv()
 
 app.config["REDIS_URL"] = os.getenv("REDIS_URL")
+
 app.register_blueprint(sse, url_prefix='/stream')
 
 state_object = SharedState()
@@ -73,10 +76,10 @@ def delete_interest():
     return jsonify({"error": "Bad Request"}), 400
 
 if __name__ == "__main__":
-    consumer_thread = threading.Thread(target=consumer, args=(state_object,), daemon=True)
+    consumer_thread = threading.Thread(target=consumer, args=(state_object, app), daemon=True)
     consumer_thread.start()
     try:
-        app.run(debug=True, threaded=True, use_reloader=False)
+        app.run(threaded=True, use_reloader=False)
     except Exception as e:
         print("\nAbortando...")
         print(f"Erro: {e}")

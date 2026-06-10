@@ -4,9 +4,9 @@ from backend.shared.security import verify_and_extract_envelope
 from backend.shared.messaging import RabbitMQHandler
 from backend.gateway.state import SharedState
 from cryptography.exceptions import InvalidSignature
-from flask_sse import sse
+from backend.gateway.sse import sse
 
-def consumer(shared_state: SharedState):
+def consumer(shared_state: SharedState, app):
     consumer_broker = RabbitMQHandler()
     consumer_broker.establish_connection()
     queue_name = consumer_broker.declare_queue()
@@ -21,7 +21,6 @@ def consumer(shared_state: SharedState):
     )
 
     def callback(ch, method, properties, body):
-        from backend.gateway.app import app
         try:
             envelope = json.loads(body)
             incoming_routing_key = method.routing_key
