@@ -73,8 +73,11 @@ def delete_interest():
     return jsonify({"error": "Bad Request"}), 400
 
 if __name__ == "__main__":
+    consumer_thread = threading.Thread(target=consumer, args=(state_object,), daemon=True)
+    consumer_thread.start()
     try:
-        app.run(debug=True)
-    except Exception:
+        app.run(debug=True, threaded=True, use_reloader=False)
+    except Exception as e:
         print("\nAbortando...")
+        print(f"Erro: {e}")
         sys.exit(0)
