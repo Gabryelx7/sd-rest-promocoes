@@ -16,11 +16,18 @@ from backend.gateway.service import (
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 load_dotenv()
 
 app.config["REDIS_URL"] = os.getenv("REDIS_URL")
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers.setdefault("Access-Control-Allow-Origin", "*")
+    response.headers.setdefault("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,X-Client-Id")
+    response.headers.setdefault("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+    return response
 
 app.register_blueprint(sse, url_prefix='/stream')
 
