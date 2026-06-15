@@ -21,10 +21,36 @@ function App() {
     }
   };
 
+  // REST API: Fetch Interests
+  const fetchInterests = async () => {
+    if (!clientId) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/interests`, {
+        headers: { 'X-Client-Id': clientId }
+      });
+
+      if (!response.ok) {
+        console.error("Erro ao buscar interesses:", response.statusText);
+        return;
+      }
+
+      const data = await response.json();
+      setInterests(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Erro ao buscar interesses:", error);
+    }
+  };
+
   // Fetch promotions on initial load
   useEffect(() => {
     fetchPromotions();
   }, []);
+
+  useEffect(() => {
+    if (!clientId) return;
+    fetchInterests();
+  }, [clientId]);
 
   // SSE: Real-Time Notifications ---
   useEffect(() => {
@@ -99,6 +125,8 @@ function App() {
         setInterests([...interests, newInterest.toLowerCase()]);
       }
       setNewInterest("");
+
+      fetchInterests();
     } catch (error) {
       console.error("Erro ao adicionar interesse:", error);
     }
@@ -115,6 +143,7 @@ function App() {
         body: JSON.stringify({ interesse: category })
       });
       setInterests(interests.filter(i => i !== category));
+      fetchInterests();
     } catch (error) {
       console.error("Erro ao remover interesse:", error);
     }

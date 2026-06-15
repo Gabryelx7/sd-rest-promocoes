@@ -11,7 +11,8 @@ from backend.gateway.service import (
     register_promotion,
     vote_on_promotion,
     register_interest,
-    remove_interest
+    remove_interest,
+    list_interests
 )
 from flask_cors import CORS
 
@@ -88,6 +89,19 @@ def delete_interest():
     request_body["X-Client-Id"] = client_id
 
     interests = remove_interest(state_object, request_body)
+    if interests is not None and interests != {}:
+        return jsonify(interests), 200
+
+    return jsonify({"error": "Bad Request"}), 400
+
+# Lista os interesses de um usuário
+@app.route('/interests', methods=['GET'])
+def get_interests():
+    client_id = request.headers.get("X-Client-Id")
+    if not client_id:
+        return jsonify({"error": "Missing X-Client-Id header"}), 400
+
+    interests = list_interests(state_object, client_id)
     if interests is not None and interests != {}:
         return jsonify(interests), 200
 

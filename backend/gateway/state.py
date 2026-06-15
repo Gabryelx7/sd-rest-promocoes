@@ -79,6 +79,12 @@ class SharedState:
             print(f"[!] Cliente inválido: {client_id}")
             return {}
     
+    def get_interests(self, client_id):
+        with self._lock:
+            if client_id in self.interests:
+                return self.interests[client_id]
+            return {}
+    
     def get_clients_per_interest(self, target_interest):
         with self._lock:
             clients_list = []

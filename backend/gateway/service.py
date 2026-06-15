@@ -102,3 +102,8 @@ def remove_interest(shared_state: SharedState, request_data: dict):
         return interests_list
     
     return {}
+
+def list_interests(shared_state: SharedState, client_id: str):
+    interests_list = shared_state.get_interests(client_id)
+    
+    return interests_list
