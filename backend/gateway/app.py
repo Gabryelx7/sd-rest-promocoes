@@ -37,8 +37,21 @@ state_object = SharedState()
 # Lista promoções
 @app.route('/promotions', methods=['GET'])
 def get_promotions():
+    client_id = request.headers.get("X-Client-Id")
     published_promos = list_promotions(state_object)
-    return jsonify(published_promos), 200
+    
+    if not client_id:
+        return jsonify(published_promos), 200
+
+    user_interests = list_interests(state_object, client_id) or []
+    hotdeals = state_object.hotdeal_promos
+    
+    filtered_promos = {}
+    for pid, promo in published_promos.items():
+        if promo.get("categoria") in user_interests or pid in hotdeals:
+            filtered_promos[pid] = promo
+    
+    return jsonify(filtered_promos), 200
 
 # Cadastra uma nova promoção
 @app.route('/promotions', methods=['POST'])

@@ -11,8 +11,12 @@ function App() {
 
   // REST API: Fetch Promotions
   const fetchPromotions = async () => {
+    if (!clientId) return;
+    
     try {
-      const response = await fetch(`${API_BASE}/promotions`);
+      const response = await fetch(`${API_BASE}/promotions`, {
+        headers: { 'X-Client-Id': clientId }
+      });
       const data = await response.json();
       
       setPromotions(Object.values(data));

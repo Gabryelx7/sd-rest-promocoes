@@ -31,17 +31,22 @@ def consumer(shared_state: SharedState, app):
 
             elif incoming_routing_key == "promocao.destaque":
                 event_data = verify_and_extract_envelope(envelope, shared_state.ranking_public_key)
+
+                shared_state.add_hotdeal(event_data)
+
                 category = event_data['categoria']
                 score = event_data['pontuacao']
+
                 pub_message = {
                     "Título": "HOT DEAL",
                     "Mensagem": f"Uma promoção da categoria {category} está em alta com {score} votos!",
                     "Produto": event_data['produto'],
                     "Preço": event_data['preco']
                 }
+
                 with app.app_context():
                     sse.publish(pub_message, type='hotdeal')
-                print("Hot Deal message sent!")
+                print("[+] Mensagem de Hot Deal enviada via SSE!")
 
             elif incoming_routing_key.startswith("promocao.categoria."):
                 category = incoming_routing_key.split('.')[-1]
@@ -52,7 +57,7 @@ def consumer(shared_state: SharedState, app):
                     with app.app_context():
                         for client in clients_list:
                             sse.publish(pub_message, type='category', channel=client)
-                            print("[+] Category message sent!")
+                            print("[+] Mensagem de Categoria enviada via SSE!")
 
         except InvalidSignature:
             print("\n[!] Promoção publicada com assinatura inválida. Descartando.")

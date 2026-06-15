@@ -50,9 +50,13 @@ class SharedState:
             target_promo["votos"] += vote
             return target_promo
     
-    def add_hotdeal(self, promo_id, new_promo):
+    def add_hotdeal(self, new_hotdeal):
         with self._lock:
-            self.hotdeal_promos[promo_id] = new_promo
+            try:
+                promo_id = new_hotdeal["id"]
+                self.hotdeal_promos[promo_id] = new_hotdeal
+            except KeyError:
+                print("[!] Aviso: Hot-deal recebido sem ID. Ignorando...")
     
     def add_interest(self, client_id, new_interest):
         with self._lock:
