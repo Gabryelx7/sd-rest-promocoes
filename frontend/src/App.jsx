@@ -5,29 +5,16 @@ const API_BASE = "http://127.0.0.1:5000";
 function App() {
   const [clientId, setClientId] = useState("CLIENTE_TESTE_1");
   const [promotions, setPromotions] = useState([]);
-
-  // Read from localStorage on initial load
-  const [interests, setInterests] = useState(() => {
-    const saved = localStorage.getItem('myInterests');
-    return saved ? JSON.parse(saved) : [];
-  });
-  useEffect(() => {
-    localStorage.setItem('myInterests', JSON.stringify(interests));
-  }, [interests]);
-
+  const [interests, setInterests] = useState([]);
   const [newInterest, setNewInterest] = useState("");
   const [notifications, setNotifications] = useState([]);
 
-  // --- REST API: Fetch Promotions ---
+  // REST API: Fetch Promotions
   const fetchPromotions = async () => {
     try {
-      const response = await fetch(`${API_BASE}/promotions`, {
-        cache: 'no-store', // <--- Force the browser to bypass cache
-        headers: {
-          'Pragma': 'no-cache'
-        }
-      });
+      const response = await fetch(`${API_BASE}/promotions`);
       const data = await response.json();
+      
       setPromotions(Object.values(data));
     } catch (error) {
       console.error("Erro ao buscar promoções:", error);
@@ -39,7 +26,7 @@ function App() {
     fetchPromotions();
   }, []);
 
-  // --- SSE: Real-Time Notifications ---
+  // SSE: Real-Time Notifications ---
   useEffect(() => {
     if (!clientId) return;
 
@@ -59,14 +46,13 @@ function App() {
 
       setNotifications((prev) => [newNotification, ...prev]);
 
+      // Automatically remove notification after 8 seconds
       setTimeout(() => {
         setNotifications((prev) => prev.filter(n => n.id !== newNotification.id));
       }, 8000);
 
-      // Add a 300ms safety delay to guarantee backend state is updated
-      setTimeout(() => {
-        fetchPromotions();
-      }, 300);
+      // Refresh the promotions list so the user sees the new data automatically
+      fetchPromotions();
     };
 
     globalSse.addEventListener('hotdeal', (e) => handleNotification(e, 'hotdeal'));
@@ -100,7 +86,7 @@ function App() {
     if (!newInterest) return;
 
     try {
-      const response = await fetch(`${API_BASE}/interests`, {
+      await fetch(`${API_BASE}/interests`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -109,25 +95,18 @@ function App() {
         body: JSON.stringify({ interesse: newInterest.toLowerCase() })
       });
       
-      // FIX: Check if the server actually accepted it!
-      if (!response.ok) {
-        throw new Error(`Server rejected with status: ${response.status}`);
-      }
-      
-      // Only update the screen if the server returned 201 Created
       if (!interests.includes(newInterest.toLowerCase())) {
         setInterests([...interests, newInterest.toLowerCase()]);
       }
       setNewInterest("");
     } catch (error) {
       console.error("Erro ao adicionar interesse:", error);
-      alert("Falha ao adicionar interesse. Verifique o console.");
     }
   };
 
   const handleRemoveInterest = async (category) => {
     try {
-      const response = await fetch(`${API_BASE}/interests`, {
+      await fetch(`${API_BASE}/interests`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
@@ -135,16 +114,9 @@ function App() {
         },
         body: JSON.stringify({ interesse: category })
       });
-      
-      // FIX: Check if the server actually deleted it!
-      if (!response.ok) {
-        throw new Error(`Server rejected with status: ${response.status}`);
-      }
-
       setInterests(interests.filter(i => i !== category));
     } catch (error) {
       console.error("Erro ao remover interesse:", error);
-      alert("Falha ao remover interesse. Verifique o console.");
     }
   };
 
@@ -155,7 +127,7 @@ function App() {
       
       {/* Client ID Configuration */}
       <div style={styles.section}>
-        <label><b>ID do Cliente (Simulação): </b></label>
+        <label><b>ID do Cliente: </b></label>
         <input 
           value={clientId} 
           onChange={(e) => setClientId(e.target.value)}
