@@ -7,15 +7,19 @@ function App() {
   const [interests, setInterests] = useState([]);
   const [newInterest, setNewInterest] = useState("");
   const [notifications, setNotifications] = useState([]);
+
   const [clientId, setClientId] = useState(() => {
-  const savedId = localStorage.getItem("app_client_id");
-    return savedId || "CLIENTE_TESTE_1";
+    return localStorage.getItem("app_client_id") || "CLIENTE_TESTE_1";
   });
+  const [inputClientId, setInputClientId] = useState(clientId)
   
   useEffect(() => {
-    if (clientId) {
-      localStorage.setItem("app_client_id", clientId);
-    }
+    if (!clientId) return;
+
+    localStorage.setItem("app_client_id", clientId);
+
+    fetchPromotions();
+    fetchInterests();
   }, [clientId]);
 
   // REST API: Fetch Promotions
@@ -162,6 +166,12 @@ function App() {
     }
   };
 
+  const handleClientChange = () => {
+    if (inputClientId.trim() !== "") {
+      setClientId(inputClientId.trim());
+    }
+  };
+
   // --- UI Render ---
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
@@ -172,9 +182,28 @@ function App() {
         <label><b>ID do Cliente: </b></label>
         <input 
           value={clientId} 
-          onChange={(e) => setClientId(e.target.value)}
+          onChange={(e) => setInputClientId(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleClientChange()}
           style={{ padding: '5px', marginLeft: '10px' }}
         />
+        <button
+          onClick={handleClientChange}
+          style={{
+            padding: '6 px 15px',
+            marginLeft: '10px',
+            cursor: 'pointer',
+            backgroundColor: '#1976d2',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px'
+          }}
+        >
+          Trocar Usuário
+        </button>
+
+        <span style={{ marginLeft: '20px', color: '#555' }}>
+          Usuário Ativo: <strong style={{ color: '#2e7d32' }}>{clientId}</strong>
+        </span>
       </div>
 
       {/* Floating Notifications Area */}
