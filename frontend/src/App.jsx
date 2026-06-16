@@ -3,11 +3,20 @@ import React, { useState, useEffect } from 'react';
 const API_BASE = "http://127.0.0.1:5000";
 
 function App() {
-  const [clientId, setClientId] = useState("CLIENTE_TESTE_1");
   const [promotions, setPromotions] = useState([]);
   const [interests, setInterests] = useState([]);
   const [newInterest, setNewInterest] = useState("");
   const [notifications, setNotifications] = useState([]);
+  const [clientId, setClientId] = useState(() => {
+  const savedId = localStorage.getItem("app_client_id");
+    return savedId || "CLIENTE_TESTE_1";
+  });
+  
+  useEffect(() => {
+    if (clientId) {
+      localStorage.setItem("app_client_id", clientId);
+    }
+  }, [clientId]);
 
   // REST API: Fetch Promotions
   const fetchPromotions = async () => {
