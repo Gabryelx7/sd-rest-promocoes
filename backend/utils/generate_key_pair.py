@@ -1,7 +1,7 @@
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
 
-KEYS = ["promocao", "ranking", "gateway", "notificacao"]
+KEYS = ["promocao", "ranking", "gateway", "notificacao", "loja"]
 
 for key in KEYS:
     PRIVATE_KEY_FILE = f"backend/keys/{key}_private_key.pem"
