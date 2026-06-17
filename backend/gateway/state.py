@@ -85,9 +85,7 @@ class SharedState:
     
     def get_interests(self, client_id):
         with self._lock:
-            if client_id in self.interests:
-                return self.interests[client_id]
-            return {}
+            return self.interests.get(client_id, [])
     
     def get_clients_per_interest(self, target_interest):
         with self._lock:

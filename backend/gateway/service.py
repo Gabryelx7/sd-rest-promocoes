@@ -58,11 +58,11 @@ def vote_on_promotion(shared_state: SharedState, promo_id: str, request_data: di
         assert vote == 1 or vote == -1
     except (AssertionError, TypeError, KeyError):
         print("[!] Voto inválido!")
-        return {}
+        return {"error": "Invalid vote"}
     
     updated_promo = shared_state.add_vote(promo_id, vote)
     if not updated_promo:
-        return {}
+        return {"error": "Item not found"}
 
     event_data = {
         "id": promo_id,

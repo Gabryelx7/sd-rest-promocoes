@@ -58,9 +58,9 @@ def get_promotions():
 def post_promotion():
     request_body = request.get_json()
     new_promo = register_promotion(state_object, request_body)
-    if new_promo:
+    if isinstance(new_promo, dict) and "error" not in new_promo:
         return jsonify(new_promo), 201
-    
+
     return jsonify(new_promo), 400
 
 # Vota em uma promoção
@@ -68,10 +68,11 @@ def post_promotion():
 def vote_promotion_route(promo_id):
     request_body = request.get_json()
     updated_promo = vote_on_promotion(state_object, promo_id, request_body)
-    if updated_promo:
-        return jsonify(updated_promo), 201
+    if isinstance(updated_promo, dict) and "error" in updated_promo:
+        status_code = 404 if updated_promo["error"] == "Item not found" else 400
+        return jsonify(updated_promo), status_code
     
-    return jsonify({"error": "Item not found"}), 404
+    return jsonify(updated_promo), 200
 
 # Registra interesse em uma categoria
 @app.route('/interests', methods=['POST'])
@@ -85,7 +86,7 @@ def post_interest():
     request_body["X-Client-Id"] = client_id
 
     interests_list = register_interest(state_object, request_body)
-    if interests_list is not None and interests_list != {}:
+    if isinstance(interests_list, list):
         return jsonify(interests_list), 201
 
     return jsonify({"error": "Bad Request"}), 400
@@ -102,7 +103,7 @@ def delete_interest():
     request_body["X-Client-Id"] = client_id
 
     interests = remove_interest(state_object, request_body)
-    if interests is not None and interests != {}:
+    if isinstance(interests, list):
         return jsonify(interests), 200
 
     return jsonify({"error": "Bad Request"}), 400
@@ -115,10 +116,7 @@ def get_interests():
         return jsonify({"error": "Missing X-Client-Id header"}), 400
 
     interests = list_interests(state_object, client_id)
-    if interests is not None and interests != {}:
-        return jsonify(interests), 200
-
-    return jsonify({"error": "Bad Request"}), 400
+    return jsonify(interests), 200
 
 if __name__ == "__main__":
     consumer_thread = threading.Thread(target=consumer, args=(state_object, app), daemon=True)
