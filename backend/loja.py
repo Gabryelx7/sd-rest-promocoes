@@ -19,38 +19,44 @@ except FileNotFoundError:
 
 def main():
     print("=== Painel da Loja - Cadastrar Promoção ===")
-    produto = input("Nome do Produto: ").strip()
-    categoria = input("Categoria: ").strip().lower()
-    
-    try:
-        preco = float(input("Preço: "))
-    except ValueError:
-        print("[!] Preço inválido.")
-        return
-
-    email_loja = RESEND_EMAIL
-
-    event_data = {
-        "produto": produto,
-        "categoria": categoria,
-        "preco": preco,
-        "email_loja": email_loja
-    }
-
-    envelope = create_signed_envelope(event_data, private_key)
-
-    print("\n[*] Enviando promoção assinada via REST API...")
-    try:
-        response = requests.post(GATEWAY_URL, json=envelope)
+    while True:
+        produto = input("Nome do Produto: ").strip()
+        categoria = input("Categoria: ").strip().lower()
         
-        if response.status_code == 201:
-            print("[+] Sucesso! Promoção enviada e aceita pelo Gateway.")
-            print(response.json())
-        else:
-            print(f"[!] Erro no Gateway ({response.status_code}): {response.json()}")
+        try:
+            preco = float(input("Preço: "))
+        except ValueError:
+            print("[!] Preço inválido.")
+            return
+
+        email_loja = RESEND_EMAIL
+
+        event_data = {
+            "produto": produto,
+            "categoria": categoria,
+            "preco": preco,
+            "email_loja": email_loja
+        }
+
+        envelope = create_signed_envelope(event_data, private_key)
+
+        print("\n[*] Enviando promoção assinada via REST API...")
+        try:
+            response = requests.post(GATEWAY_URL, json=envelope)
             
-    except requests.exceptions.ConnectionError:
-        print("[!] Erro: Não foi possível conectar ao Gateway API. Ele está rodando?")
+            if response.status_code == 201:
+                print("[+] Sucesso! Promoção enviada e aceita pelo Gateway.")
+                print(response.json())
+            else:
+                print(f"[!] Erro no Gateway ({response.status_code}): {response.json()}")
+                
+        except requests.exceptions.ConnectionError:
+            print("[!] Erro: Não foi possível conectar ao Gateway API. Ele está rodando?")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nAbortando...")
+    except Exception as e:
+        print(f"\nErro: {e}; Abortando...")
