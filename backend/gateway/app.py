@@ -122,7 +122,7 @@ if __name__ == "__main__":
     consumer_thread = threading.Thread(target=consumer, args=(state_object, app), daemon=True)
     consumer_thread.start()
     try:
-        app.run(threaded=True, use_reloader=False)
+        app.run(host="0.0.0.0", port=5000, threaded=True, use_reloader=False)
     except Exception as e:
         print("\nAbortando...")
         print(f"Erro: {e}")

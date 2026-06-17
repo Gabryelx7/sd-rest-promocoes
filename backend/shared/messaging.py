@@ -1,11 +1,12 @@
 import pika
 import json
+import os
 
 class RabbitMQHandler():
     def __init__(self):
         self.exchange = 'promocoes'
         self.exchange_type = 'topic'
-        self.host = 'localhost'
+        self.host = os.getenv("RABBITMQ_HOST", "localhost")
         self.connection = None
         self.channel = None
 

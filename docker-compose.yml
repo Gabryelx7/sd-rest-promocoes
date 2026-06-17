@@ -5,6 +5,11 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   
   redis:
     image: redis:latest
@@ -16,6 +21,64 @@ services:
     environment:
       - REDIS_ARGS=--requirepass redis --appendonly yes
     restart: unless-stopped
+
+  # --- MICROSERVICES ---
+
+  gateway:
+    build: 
+      context: ./backend
+    container_name: ms-gateway
+    command: python -m backend.gateway.app
+    ports:
+      - "5000:5000"
+    environment:
+      - REDIS_URL=redis://:redis@redis:6379/0
+      - RABBITMQ_HOST=rabbitmq
+    volumes:
+      - ./backend/keys:/app/backend/keys
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  promocao:
+    build: 
+      context: ./backend
+    container_name: ms-promocao
+    command: python -m backend.promocao
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    volumes:
+      - ./backend/keys:/app/backend/keys
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  ranking:
+    build: 
+      context: ./backend
+    container_name: ms-ranking
+    command: python -m backend.ranking
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    volumes:
+      - ./backend/keys:/app/backend/keys
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  notificacao:
+    build: 
+      context: ./backend
+    container_name: ms-notificacao
+    command: python -m backend.notificacao
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RESEND_API_KEY=${RESEND_API_KEY} 
+    volumes:
+      - ./backend/keys:/app/backend/keys
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   redis-data:

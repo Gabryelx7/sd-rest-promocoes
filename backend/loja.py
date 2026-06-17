@@ -18,8 +18,8 @@ except FileNotFoundError:
     sys.exit(1)
 
 def main():
-    print("=== Painel da Loja - Cadastrar Promoção ===")
     while True:
+        print("\n=== Painel da Loja - Cadastrar Promoção ===\n")
         produto = input("Nome do Produto: ").strip()
         categoria = input("Categoria: ").strip().lower()
         
