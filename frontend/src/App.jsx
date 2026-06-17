@@ -181,7 +181,7 @@ function App() {
       <div style={styles.section}>
         <label><b>ID do Cliente: </b></label>
         <input 
-          value={clientId} 
+          value={inputClientId} 
           onChange={(e) => setInputClientId(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleClientChange()}
           style={{ padding: '5px', marginLeft: '10px' }}
